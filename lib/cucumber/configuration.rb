@@ -69,6 +69,10 @@ module Cucumber
       @options[:fail_fast]
     end
 
+    def language
+      @options[:language]
+    end
+
     def retry_attempts
       @options[:retry]
     end
@@ -205,7 +209,7 @@ module Cucumber
     # formatter wants to display snippets to the user.
     #
     # Each proc should take the following arguments:
-    # 
+    #
     #  - keyword
     #  - step text
     #  - multiline argument
