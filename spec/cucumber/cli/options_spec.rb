@@ -70,23 +70,23 @@ module Cucumber
             end
           end
 
-          context "with invalid LANG" do 
+          context "with invalid LANG" do
             include RSpec::WorkInProgress
 
-            it "exits" do 
-              when_parsing '--i18n foo' do 
+            it "exits" do
+              when_parsing '--i18n foo' do
                 expect(Kernel).to receive(:exit)
               end
             end
 
-            it "says the language was invalid" do 
-              after_parsing '--i18n foo' do 
+            it "says the language was invalid" do
+              after_parsing '--i18n foo' do
                 expect(@output_stream.string).to include("Invalid language 'foo'. Available languages are:")
               end
             end
 
-            it "displays the language table" do 
-              after_parsing '--i18n foo' do 
+            it "displays the language table" do
+              after_parsing '--i18n foo' do
                 ::Gherkin::DIALECTS.keys.map do |key|
                   expect(@output_stream.string).to include("#{key}");
                 end
@@ -136,7 +136,7 @@ module Cucumber
             options = Options.new(output_stream, error_stream, :default_profile => 'default')
 
             options.parse!(%w{-f pretty})
-            
+
             expect(options[:formats]).to eq [['pretty', output_stream], ["junit", "result.xml"]]
           end
         end
@@ -189,7 +189,7 @@ module Cucumber
             expect(options[:verbose]).to be true
           end
 
-          it "gives precendene to the origianl options' paths" do
+          it "gives precedence to the original options' paths" do
             given_cucumber_yml_defined_as('foo' => %w[features])
             options.parse!(%w[my.feature -p foo])
 
@@ -293,7 +293,7 @@ module Cucumber
             expect(options[:source]).to be false
             expect(options[:duration]).to be false
           end
-          
+
           it "uses --no-duration when defined in the profile" do
             given_cucumber_yml_defined_as('foo' => '--no-duration')
             options.parse!(%w[-p foo])
@@ -349,14 +349,14 @@ module Cucumber
         end
 
         context '--retry ATTEMPTS' do
-          it 'is 0 by default' do 
-            after_parsing("") do 
+          it 'is 0 by default' do
+            after_parsing("") do
               expect(options[:retry]).to eql 0
             end
           end
 
-          it 'sets the options[:retry] value' do 
-            after_parsing("--retry 4") do 
+          it 'sets the options[:retry] value' do
+            after_parsing("--retry 4") do
               expect(options[:retry]).to eql 4
             end
           end
