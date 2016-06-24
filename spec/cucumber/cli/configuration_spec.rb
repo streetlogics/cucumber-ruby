@@ -45,6 +45,14 @@ module Cli
       expect(config.options[:require]).to include('some_file')
     end
 
+    context '--language' do
+      it 'sets the language' do
+        config.parse!(%w{--language it})
+
+        expect(config.options[:language]).to eql 'it'
+      end
+    end
+
     context '--profile' do
       include RSpec::WorkInProgress
 
@@ -193,10 +201,10 @@ END_OF_MESSAGE
 
       expect(config.options[:dry_run]).to be true
     end
-    
+
     it "implies --no-duration with --dry-run option" do
       config.parse!(%w{--dry-run})
-      
+
       expect(config.options[:duration]).to be false
     end
 
@@ -219,10 +227,10 @@ END_OF_MESSAGE
       expect(config.options[:source]).to be false
       expect(config.options[:duration]).to be false
     end
-    
+
     it "sets duration to false with --no-duration" do
       config.parse!(%w{--no-duration})
-      
+
       expect(config.options[:duration]).to be false
     end
 
@@ -424,8 +432,8 @@ END_OF_MESSAGE
       end
     end
 
-    describe "#retry_attempts" do 
-      it "returns the specified number of retries" do 
+    describe "#retry_attempts" do
+      it "returns the specified number of retries" do
         config.parse!(['--retry=3'])
         expect(config.retry_attempts).to eql 3
       end
