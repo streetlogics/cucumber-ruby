@@ -112,7 +112,7 @@ module Cucumber
     def features
       @features ||= feature_files.map do |path|
         source = NormalisedEncodingFile.read(path)
-        Cucumber::Core::Gherkin::Document.new(path, source)
+        Cucumber::Core::Gherkin::Document.new(path, source, @configuration.language)
       end
     end
 
