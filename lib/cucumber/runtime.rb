@@ -222,6 +222,8 @@ module Cucumber
     def failure?
       if @configuration.wip?
         summary_report.test_cases.total_passed > 0
+      elsif @configuration.retry_attempts > 0
+        summary_report.test_cases.total_passed != @configuration.total_cases
       else
         summary_report.test_cases.total_failed > 0 || summary_report.test_steps.total_failed > 0 ||
           (@configuration.strict? && (summary_report.test_steps.total_undefined > 0 || summary_report.test_steps.total_pending > 0))
@@ -241,6 +243,7 @@ module Cucumber
         filters << Cucumber::Core::Test::LocationsFilter.new(filespecs.locations)
         filters << Filters::Randomizer.new(@configuration.seed) if @configuration.randomize?
         filters << Filters::Quit.new
+
         filters << Filters::Retry.new(@configuration)
         # TODO: can we just use RbLanguages's step definitions directly?
         step_match_search = StepMatchSearch.new(@support_code.ruby.method(:step_matches), @configuration)
