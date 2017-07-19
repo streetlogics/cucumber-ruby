@@ -110,11 +110,11 @@ module Cucumber
             Ast::Comments.new(step.comments).accept(formatter)
             messages.each { |message| formatter.puts(message) }
             embeddings.each { |embedding| embedding.send_to_formatter(formatter) }
-            formatter.before_step_result *step_result_attributes
+            formatter.before_step_result(*step_result_attributes)
             print_step_name(formatter)
             Ast::MultilineArg.for(multiline_arg).accept(formatter)
             print_exception(formatter)
-            formatter.after_step_result *step_result_attributes
+            formatter.after_step_result(*step_result_attributes)
             formatter.after_step(self)
           end
 
@@ -278,7 +278,7 @@ module Cucumber
         end
 
         Scenario = Struct.new(:status, :name, :location) do
-          def backtrace_line(step_name = "#{name}", line = self.location.line)
+          def backtrace_line(step_name = name.to_s, line = self.location.line)
             "#{location.on_line(line)}:in `#{step_name}'"
           end
 
@@ -292,7 +292,7 @@ module Cucumber
         end
 
         ScenarioOutline = Struct.new(:status, :name, :location) do
-          def backtrace_line(step_name = "#{name}", line = self.location.line)
+          def backtrace_line(step_name = name.to_s, line = self.location.line)
             "#{location.on_line(line)}:in `#{step_name}'"
           end
 
@@ -377,9 +377,7 @@ module Cucumber
             @feature = feature
           end
 
-          def feature
-            @feature
-          end
+          attr_reader :feature
         end
 
       end

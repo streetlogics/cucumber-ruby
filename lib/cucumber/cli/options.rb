@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require 'cucumber/cli/profile_loader'
 require 'cucumber/formatter/ansicolor'
-require 'cucumber/rb_support/rb_language'
+require 'cucumber/glue/registry_and_more'
 require 'cucumber/project_initializer'
 
 module Cucumber
@@ -48,12 +48,13 @@ module Cucumber
       NO_PROFILE_LONG_FLAG = '--no-profile'
       FAIL_FAST_FLAG = '--fail-fast'
       RETRY_FLAG = '--retry'
-      OPTIONS_WITH_ARGS = ['-r', '--require', '--i18n', '-f', '--format', '-o', '--out',
+      OPTIONS_WITH_ARGS = ['-r', '--require', '--i18n-keywords', '-f', '--format', '-o', '--out',
                                   '-t', '--tags', '-n', '--name', '-e', '--exclude',
                                   PROFILE_SHORT_FLAG, PROFILE_LONG_FLAG, RETRY_FLAG,
                                   '-l', '--lines', '--port',
                                   '-I', '--snippet-type']
       ORDER_TYPES = %w{defined random}
+      TAG_LIMIT_MATCHER = /(?<tag_name>\@\w+):(?<limit>\d+)/x
 
       def self.parse(args, out_stream, error_stream, options = {})
         new(out_stream, error_stream, options).parse!(args)
@@ -81,7 +82,7 @@ module Cucumber
         @options[key] = value
       end
 
-      def parse!(args)
+      def parse!(args) # rubocop:disable Metrics/AbcSize
         @args = args
         @expanded_args = @args.dup
 
@@ -96,14 +97,15 @@ module Cucumber
           end
 
           opts.on("#{RETRY_FLAG} ATTEMPTS", *retry_msg) {|v| set_option :retry, v.to_i }
-          opts.on('--i18n LANG', *i18n_msg) {|lang| set_language lang }
+          opts.on('--i18n-languages', *i18n_languages_msg) { list_languages_and_exit }
+          opts.on('--i18n-keywords LANG', *i18n_keywords_msg) {|lang| set_language lang }
           opts.on(FAIL_FAST_FLAG, 'Exit immediately following the first failing scenario') { set_option :fail_fast }
           opts.on('-f FORMAT', '--format FORMAT', *format_msg, *FORMAT_HELP) do |v|
             add_option :formats, [*parse_formats(v), @out_stream]
           end
           opts.on('--init', *init_msg) {|v| initialize_project }
           opts.on('-o', '--out [FILE|DIR]', *out_msg) {|v| set_out_stream v }
-          opts.on('-t TAG_EXPRESSION', '--tags TAG_EXPRESSION', *tags_msg) {|v| add_option :tag_expressions, v }
+          opts.on('-t TAG_EXPRESSION', '--tags TAG_EXPRESSION', *tags_msg) {|v| add_tag v }
           opts.on('-n NAME', '--name NAME', *name_msg) {|v| add_option :name_regexps, /#{v}/ }
           opts.on('-e', '--exclude PATTERN', *exclude_msg) {|v| add_option :excludes, Regexp.new(v) }
           opts.on(PROFILE_SHORT_FLAG, "#{PROFILE_LONG_FLAG} PROFILE", *profile_short_flag_msg) {|v| add_profile v }
@@ -200,7 +202,13 @@ TEXT
         [ 'How to format features (Default: pretty). Available formats:' ]
       end
 
-      def i18n_msg
+      def i18n_languages_msg
+        [
+          'List all available languages'
+        ]
+      end
+
+      def i18n_keywords_msg
         [
           'List keywords for in a particular language',
           %{Run with "--i18n help" to see all languages}
@@ -261,17 +269,20 @@ TEXT
         [
           'Only execute the features or scenarios with tags matching TAG_EXPRESSION.',
           'Scenarios inherit tags declared on the Feature level. The simplest',
-          'TAG_EXPRESSION is simply a tag. Example: --tags @dev. When a tag in a tag',
-          'expression starts with a ~, this represents boolean NOT. Example: --tags ~@dev.',
-          'A tag expression can have several tags separated by a comma, which represents',
-          'logical OR. Example: --tags @dev,@wip. The --tags option can be specified',
-          'several times, and this represents logical AND. Example: --tags @foo,~@bar --tags @zap.',
-          'This represents the boolean expression (@foo || !@bar) && @zap.',
+          'TAG_EXPRESSION is simply a tag. Example: --tags @dev. To represent',
+          "boolean NOT preceed the tag with 'not '. Example: --tags 'not @dev'.",
+          'A tag expression can have several tags separated by an or which represents',
+          "logical OR. Example: --tags '@dev or @wip'. The --tags option can be specified",
+          'A tag expression can have several tags separated by an and which represents',
+          "logical AND. Example: --tags '@dev and @wip'. The --tags option can be specified",
+          'several times, and this also represents logical AND.',
+          "Example: --tags '@foo or not @bar' --tags @zap. This represents the boolean",
+          'expression (@foo || !@bar) && @zap.',
           "\n",
           'Beware that if you want to use several negative tags to exclude several tags',
-          'you have to use logical AND: --tags ~@fixme --tags ~@buggy.',
+          "you have to use logical AND: --tags 'not @fixme and not @buggy'.",
           "\n",
-          'Positive tags can be given a threshold to limit the number of occurrences.',
+          'Tags can be given a threshold to limit the number of occurrences.',
           'Example: --tags @qa:3 will fail if there are more than 3 occurrences of the @qa tag.',
           'This can be practical if you are practicing Kanban or CONWIP.'
         ]
@@ -302,7 +313,7 @@ TEXT
       def snippet_type_msg
         [
           'Use different snippet type (Default: regexp). Available types:',
-          Cucumber::RbSupport::RbLanguage.cli_snippet_type_options
+          Cucumber::Glue::RegistryAndMore.cli_snippet_type_options
         ].flatten
       end
 
@@ -312,7 +323,7 @@ TEXT
           'cucumber examples/i18n/en/features',
           'cucumber @rerun.txt (See --format rerun)',
           'cucumber examples/i18n/it/features/somma.feature:6:98:113',
-          'cucumber -s -i http://rubyurl.com/eeCl', '', '',
+          'cucumber -s -i http://rubyurl.com/eeCl', '', ''
         ].join("\n")
       end
 
@@ -330,13 +341,8 @@ TEXT
       def set_language(lang)
         require 'gherkin/dialect'
 
-        if lang == 'help'
-          list_languages_and_exit
-        elsif !::Gherkin::DIALECTS.keys.include? lang
-          indicate_invalid_language_and_exit(lang)
-        else
-          list_keywords_and_exit(lang)
-        end
+        return indicate_invalid_language_and_exit(lang) unless ::Gherkin::DIALECTS.keys.include? lang
+        list_keywords_and_exit(lang)
       end
 
       def disable_profile_loading
@@ -349,6 +355,26 @@ TEXT
 
       def add_option(option, value)
         @options[option] << value
+      end
+
+      def add_tag(value)
+        warn("Deprecated: Found tags option '#{value}'. Support for '~@tag' will be removed from the next release of Cucumber. Please use 'not @tag' instead.") if value.include?('~')
+        warn("Deprecated: Found tags option '#{value}'. Support for '@tag1,@tag2' will be removed from the next release of Cucumber. Please use '@tag or @tag2' instead.") if value.include?(',')
+        @options[:tag_expressions] << value.gsub(/(@\w+)(:\d+)?/, '\1')
+        add_tag_limits(value)
+      end
+
+      def add_tag_limits(value)
+        value.split(/[, ]/).map { |part| TAG_LIMIT_MATCHER.match(part) }.compact.each do |matchdata|
+          add_tag_limit(@options[:tag_limits], matchdata[:tag_name], matchdata[:limit].to_i)
+        end
+      end
+
+      def add_tag_limit(tag_limits, tag_name, limit)
+        if tag_limits[tag_name] && tag_limits[tag_name] != limit
+          raise "Inconsistent tag limits for #{tag_name}: #{tag_limits[tag_name]} and #{limit}"
+        end
+        tag_limits[tag_name] = limit
       end
 
       def set_color(color)
@@ -441,6 +467,7 @@ TEXT
         @options[:excludes] += other_options[:excludes]
         @options[:name_regexps] += other_options[:name_regexps]
         @options[:tag_expressions] += other_options[:tag_expressions]
+        merge_tag_limits(@options[:tag_limits], other_options[:tag_limits])
         @options[:env_vars] = other_options[:env_vars].merge(@options[:env_vars])
         if @options[:paths].empty?
           @options[:paths] = other_options[:paths]
@@ -464,6 +491,10 @@ TEXT
         end
 
         self
+      end
+
+      def merge_tag_limits(option_limits, other_limits)
+        other_limits.each { |key, value| add_tag_limit(option_limits, key, value) }
       end
 
       def indicate_invalid_language_and_exit(lang)
@@ -520,6 +551,7 @@ TEXT
           :formats      => [],
           :excludes     => [],
           :tag_expressions  => [],
+          :tag_limits   => {},
           :name_regexps => [],
           :env_vars     => {},
           :diff_enabled => true,

@@ -56,40 +56,42 @@ module Cucumber
           end
         end
 
-        context '--i18n' do
-          context "with LANG specified as 'help'" do
-            include RSpec::WorkInProgress
+        context '--i18n-languages' do
+          include RSpec::WorkInProgress
 
-            it 'lists all known languages' do
-              when_parsing '--i18n help' do
-                expect(Kernel).to receive(:exit)
+          it 'lists all known languages' do
+            after_parsing '--i18n-languages' do
+              ::Gherkin::DIALECTS.keys.map do |key|
+                expect(@output_stream.string).to include(key.to_s);
               end
-            end
-
-            it 'exits the program' do
-              when_parsing('--i18n help') { expect(Kernel).to receive(:exit) }
             end
           end
 
+          it 'exits the program' do
+            when_parsing('--i18n-languages') { expect(Kernel).to receive(:exit) }
+          end
+        end
+
+        context '--i18n-keywords' do
           context 'with invalid LANG' do
             include RSpec::WorkInProgress
 
             it 'exits' do
-              when_parsing '--i18n foo' do
+              when_parsing '--i18n-keywords foo' do
                 expect(Kernel).to receive(:exit)
               end
             end
 
             it 'says the language was invalid' do
-              after_parsing '--i18n foo' do
+              after_parsing '--i18n-keywords foo' do
                 expect(@output_stream.string).to include("Invalid language 'foo'. Available languages are:")
               end
             end
 
             it 'displays the language table' do
-              after_parsing '--i18n foo' do
+              after_parsing '--i18n-keywords foo' do
                 ::Gherkin::DIALECTS.keys.map do |key|
-                  expect(@output_stream.string).to include("#{key}");
+                  expect(@output_stream.string).to include(key.to_s);
                 end
               end
             end
@@ -149,12 +151,25 @@ module Cucumber
         end
 
         context '-t TAGS --tags TAGS' do
-          it 'designates tags prefixed with ~ as tags to be excluded' do
-            after_parsing('--tags ~@foo,@bar') { expect(options[:tag_expressions]).to eq ['~@foo,@bar'] }
+          it 'handles tag expressions as argument' do
+            after_parsing(['--tags', 'not @foo or @bar']) { expect(options[:tag_expressions]).to eq ['not @foo or @bar'] }
           end
 
           it 'stores tags passed with different --tags seperately' do
             after_parsing('--tags @foo --tags @bar') { expect(options[:tag_expressions]).to eq ['@foo', '@bar'] }
+          end
+
+          it 'strips tag limits from the tag expressions stored' do
+            after_parsing(['--tags', 'not @foo:2 or @bar:3']) { expect(options[:tag_expressions]).to eq ['not @foo or @bar'] }
+          end
+
+          it 'stores tag limits separately' do
+            after_parsing(['--tags', 'not @foo:2 or @bar:3']) { expect(options[:tag_limits]).to eq Hash('@foo' => 2, '@bar' => 3) }
+          end
+
+          it 'raise exception for inconsistent tag limits' do
+            expect{ after_parsing('--tags @foo:2 --tags @foo:3') }.to raise_error(RuntimeError, 'Inconsistent tag limits for @foo: 2 and 3')
+
           end
         end
 
@@ -215,6 +230,19 @@ module Cucumber
             options.parse!(%w[--tags @foo -p baz])
 
             expect(options[:tag_expressions]).to eq ['@foo', '@bar']
+          end
+
+          it 'combines the tag limits of both' do
+            given_cucumber_yml_defined_as('baz' => %w[-t @bar:2])
+            options.parse!(%w[--tags @foo:3 -p baz])
+
+            expect(options[:tag_limits]).to eq Hash('@foo' => 3, '@bar' => 2)
+          end
+
+          it 'raise exceptions for inconsistent tag limits' do
+            given_cucumber_yml_defined_as('baz' => %w[-t @bar:2])
+
+            expect{ options.parse!(%w[--tags @bar:3 -p baz]) }.to raise_error(RuntimeError, 'Inconsistent tag limits for @bar: 3 and 2')
           end
 
           it 'only takes the paths from the original options, and disgregards the profiles' do

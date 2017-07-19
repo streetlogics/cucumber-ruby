@@ -1,28 +1,47 @@
 ## [In Git](https://github.com/cucumber/cucumber-ruby/compare/v2.4.0...master)
 
-### Breaking changes
+### Breaking changes
 
 * Remove support for Ruby 1.9.3 ([#993](https://github.com/cucumber/cucumber-ruby/pull/993) @brasmusson)
 * Remove support for Ruby 2.0.0 ([#1068](https://github.com/cucumber/cucumber-ruby/pull/1068) @mattwynne)
 
 ### New Features
 
+* Detect and list flaky scenarios in the list of not ok scenarios ([#1159](https://github.com/cucumber/cucumber-ruby/pull/1159), ([1044](https://github.com/cucumber/cucumber-ruby/issues/1044)) @brasmusson)
+* List all not ok scenarios in the summary ([#1158](https://github.com/cucumber/cucumber-ruby/pull/1158) @brasmusson)
+* Emulate Cucumber-JS's new i18n CLI options ([#1140](https://github.com/cucumber/cucumber-ruby/pull/1140) @aidamanna)
 * Use the event bus in Cucumber-Ruby-Core ([#973](https://github.com/cucumber/cucumber-ruby/pull/973) @mattwynne)
 * Add --retry option to retry failed tests as part of the same run ([#920](https://github.com/cucumber/cucumber-ruby/pull/920) @DanaScheider)
 * Add a summary formatter ([#999](https://github.com/cucumber/cucumber-ruby/pull/999) @mattwynne)
 * Namespaced World modules ([#1007](https://github.com/cucumber/cucumber-ruby/pull/1007) @nodo)
 * Add per-formatter CLI options ([#1058](https://github.com/cucumber/cucumber-ruby/pull/1058) @nodo)
+* Use tag expressions for tag filtering ([#1054](https://github.com/cucumber/cucumber-ruby/pull/1054) @brasmusson)
+* Add a `TestRunStarting` event ([#1082](https://github.com/cucumber/cucumber-ruby/pull/1082) @mattwynne)
 
 ### Bugfixes
 
+* Fix the profile loader on Windows ([#1133(https://api.github.com/repos/cucumber/cucumber-ruby/pulls/1133) @enkessler)
+* Fix incorrect `DataTable#diff!` results ([#1102](https://github.com/cucumber/cucumber-ruby/pulls/1102) @)
+* Fix incorrect `DataTable#diff!` results ([#1102](https://github.com/cucumber/cucumber-ruby/pulls/1102) @botandrose)
+* Do not apply the hooks to the test case several times when using the retry option ([#1098](https://github.com/cucumber/cucumber-ruby/issues/1098) @brasmusson)
+* Fix bug in comparing empty data tables ([#1097](https://github.com/cucumber/cucumber-ruby/pulls/1097), resolves [#1096](https://github.com/cucumber/cucumber-ruby/issues/1096))
 * Configure Gemfile to fetch cucumber-ruby-wire from git if the repo is not found locally ([#983](https://github.com/cucumber/cucumber-ruby/pulls/983), resolves [#961](https://github.com/cucumber/cucumber-ruby/issues/961))
 * Fix regression displaying CLI help ([#991](https://github.com/cucumber/cucumber-ruby/pull/991) @mattwynne)
 * with_filtered_backtrace called on Test::Result::Unknown with strange feature file ([#967](https://github.com/cucumber/cucumber-ruby/issues/967) @danascheider)
 * fix HTML formatter backtrace duplicate line bug ([#965](https://gthub.com/cucumber/cucumber-ruby/pull/965) @josephks)
 * Update env names correctly ([#1067](https://github.com/cucumber/cucumber-ruby/pull/1067) @junaruga)
+* Relax filter for "/usr/local/ruby-X.Y.Z/bin/bundle" ([#1079](https://github.com/cucumber/cucumber-ruby/pull/1079) @junaruga)
+* Avoid showing "@ rb_sysopen" noise for Ruby 2.4 ([#1080](https://github.com/cucumber/cucumber-ruby/pull/1080) @junaruga)
 
-### Refactoring / DX
+### Refactoring / Developer Experience
 
+* Spec: Events.registry exercised ([#1126(https://api.github.com/repos/cucumber/cucumber-ruby/pulls/1126) @olleolleolle)
+* Remove programming language abstraction ([#1131(https://api.github.com/repos/cucumber/cucumber-ruby/pulls/1131) @tooky, @mattwynne)
+* Update cucumber yaml to use new tag syntax ([#1147(https://api.github.com/repos/cucumber/cucumber-ruby/pulls/1147) @danascheider)
+* Turn off Windows failures ([#1142(https://api.github.com/repos/cucumber/cucumber-ruby/pulls/1142) @enkessler)
+* Add script to update history.md ([#1141(https://api.github.com/repos/cucumber/cucumber-ruby/pulls/1141) @mattwynne)
+* Update Ruby 2.3 and 2.4 in .travis.yml ([#1100](https://github.com/cucumber/cucumber-ruby/pull/1100) @junaruga)
+* Fixes for rubocop violations ([#1095](https://github.com/cucumber/cucumber-ruby/pull/1095) @bv)
 * Fixes for rubocop violations ([#1042](https://github.com/cucumber/cucumber-ruby/pull/1042) @phoebeclarke)
 * Add frozen string literal magic comment to files and fix issues it causes ([#996](https://github.com/cucumber/cucumber-ruby/pull/996) @twalpole)
 * Several tests failing with rbenv ([#1017](https://github.com/cucumber/cucumber-ruby/issues/1017) @nodo)
@@ -41,6 +60,18 @@
 * fix Lint/NestedMethodDefinition ([#1035](https://github.com/cucumber/cucumber-ruby/pull/1035) @hotovson)
 * fix Lint/UnusedArgument ([#1033](https://github.com/cucumber/cucumber-ruby/pull/1033) @hotovson)
 * Fixes rubocop violation Performance/StringReplacement ([#1039](https://github.com/cucumber/cucumber-ruby/pull/1039) @pmatsinopoulos)
+* Fix an json compile error for "bundle install" on Ruby 2.4 ([#1069](https://github.com/cucumber/cucumber-ruby/pull/1069) @junaruga)
+* Add Ruby 2.4.0 as allow_failures in .travis.yml ([#1078](https://github.com/cucumber/cucumber-ruby/pull/1078) @junaruga)
+* Add ruby-head as a allow failures in .travis.yml ([#1087](https://github.com/cucumber/cucumber-ruby/pull/1087) @junaruga)
+* Refactoring for Rakefile to display cucumber task by "rake -T". ([#1088](https://github.com/cucumber/cucumber-ruby/pull/1088) @junaruga)
+* Fix some rubocop offenses ([#1093](https://github.com/cucumber/cucumber-ruby/pull/1093) @bv)
+* Add supported platforms to README.md. ([#1092](https://github.com/cucumber/cucumber-ruby/pull/1092) @junaruga)
+* Remove Ruby 2.4 from allow_failures in .travis.yml. ([#1099](https://github.com/cucumber/cucumber-ruby/pull/1099) @junaruga)
+* History: change bad character to space ([#1104](https://github.com/cucumber/cucumber-ruby/pull/1104) @olleolleolle)
+* Travis: jruby-9.1.8.0 in CI ([#1105](https://github.com/cucumber/cucumber-ruby/pull/1105) @olleolleolle)
+* Fix rubocop offenses 1021 003 ([#1107](https://github.com/cucumber/cucumber-ruby/pull/1107) @bv)
+* Travis: use jruby-9.1.10.0 ([#1114](https://github.com/cucumber/cucumber-ruby/pull/1114) @olleolleolle)
+* Change the Progress, Usage and Stepdef formatter use events ([#977](https://github.com/cucumber/cucumber-ruby/pull/977), [#1129](https://github.com/cucumber/cucumber-ruby/pull/1129) @brasmusson)
 
 ## [v2.4.0](https://github.com/cucumber/cucumber-ruby/compare/v2.3.3...v2.4.0)
 

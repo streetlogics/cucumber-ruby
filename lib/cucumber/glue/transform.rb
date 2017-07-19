@@ -1,9 +1,11 @@
 # frozen_string_literal: true
+require 'cucumber/glue/invoke_in_world'
+
 module Cucumber
-  module RbSupport
+  module Glue
     # A Ruby Transform holds a Regexp and a Proc, and is created
     # by calling <tt>Transform in the <tt>support</tt> ruby files.
-    # See also RbDsl.
+    # See also Dsl.
     #
     # Example:
     #
@@ -11,16 +13,16 @@ module Cucumber
     #     cucumbers_string.to_i
     #   end
     #
-    class RbTransform
+    class Transform
       class MissingProc < StandardError
         def message
           'Transforms must always have a proc with at least one argument'
         end
       end
 
-      def initialize(rb_language, pattern, proc)
+      def initialize(registry, pattern, proc)
         raise MissingProc if proc.nil? || proc.arity < 1
-        @rb_language, @regexp, @proc = rb_language, Regexp.new(pattern), proc
+        @registry, @regexp, @proc = registry, Regexp.new(pattern), proc
       end
 
       def match(arg)
@@ -28,9 +30,11 @@ module Cucumber
       end
 
       def invoke(arg)
-        return unless matched = match(arg)
+        matched = match(arg)
+
+        return unless matched
         args = matched.captures.empty? ? [arg] : matched.captures
-        @rb_language.current_world.cucumber_instance_exec(true, @regexp.inspect, *args, &@proc)
+        InvokeInWorld.cucumber_instance_exec_in(@registry.current_world, true, @regexp.inspect, *args, &@proc)
       end
 
       def to_s
